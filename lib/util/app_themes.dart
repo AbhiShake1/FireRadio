@@ -14,6 +14,7 @@ class AppThemes {
       primaryColor: AppColors.primaryColor1,
       backgroundColor: AppColors.primaryColor1,
       focusColor: Colors.white,
+      scaffoldBackgroundColor: Colors.black,
     );
   }
 }

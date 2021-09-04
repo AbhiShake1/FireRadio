@@ -1,5 +1,6 @@
 import 'package:fire_radio/model/app_radio.dart';
 import 'package:fire_radio/util/app_util.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:velocity_x/velocity_x.dart';
@@ -52,18 +53,61 @@ class _HomePageState extends State<HomePage> {
                   itemBuilder: (context, index) {
                     final radio = radios![index];
                     return VxBox(
-                      child: ZStack([
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: VStack([
-                            radio.name.text.bold
+                      child: ZStack(
+                        [
+                          Positioned(
+                            top: -5,
+                            right: -5,
+                            child: VxBox(
+                              child: radio.category.text.uppercase.bold
+                                  .scale(1.3)
+                                  .color(context.theme.scaffoldBackgroundColor)
+                                  .make()
+                                  .p16(),
+                            )
+                                .height(50)
                                 .color(context.theme.focusColor)
-                                .xl3
+                                .alignCenter
+                                .bottomLeftRounded(
+                                  value: 10,
+                                )
                                 .make(),
-                          ]),
-                        ),
-                      ]),
+                          ),
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: VStack(
+                              [
+                                radio.name.text.bold
+                                    .color(context.theme.focusColor)
+                                    .xl3
+                                    .make(),
+                                5.heightBox,
+                                radio.tagline.text.sm
+                                    .color(context.theme.focusColor)
+                                    .semiBold
+                                    .make(),
+                              ],
+                              crossAlignment: CrossAxisAlignment.center,
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.center,
+                            child: VStack(
+                              [
+                                const Icon(
+                                  CupertinoIcons.play_fill,
+                                  color: Colors.white,
+                                ),
+                                10.heightBox,
+                                "Double tap to play".text.gray300.italic.make(),
+                              ],
+                              crossAlignment: CrossAxisAlignment.center,
+                            ),
+                          ),
+                        ],
+                      ),
                     )
+                        .clip(Clip.antiAlias)
                         .bgImage(
                           DecorationImage(
                             fit: BoxFit.cover,
@@ -81,14 +125,23 @@ class _HomePageState extends State<HomePage> {
                           color: context.theme.focusColor,
                           width: 5,
                         )
-                        .makeCentered()
+                        .make()
+                        .onInkDoubleTap(() {}) //#todo::implement
                         .p16();
                   },
-                )
+                ).centered()
               : CircularProgressIndicator(
                   //show a white circle and blue progress indicator
                   backgroundColor: context.theme.focusColor,
                 ).centered(),
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: Icon(
+              CupertinoIcons.stop_circle,
+              size: 80,
+              color: Colors.white,
+            ),
+          ).pOnly(bottom: context.percentHeight * 12),
         ],
       ),
     );
