@@ -50,17 +50,8 @@ class AppRadioList {
 }
 
 class AppRadio {
-  final int id;
-  final int order;
-  final String name;
-  final String tagline;
-  final String color;
-  final String desc;
-  final String url;
-  final String category;
-  final String icon;
-  final String image;
-  final String lang;
+  final int id, order;
+  final String name, tagline, color, desc, url, category, icon, image, lang;
 
   AppRadio({
     required this.id,

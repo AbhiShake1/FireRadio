@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:fire_radio/model/app_radio.dart';
 import 'package:fire_radio/util/app_util.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,6 +16,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<AppRadio>? radios;
 
+  late AppRadio _selectedRadio;
+  Color? _selectedColor;
+  bool _isPlaying = false;
+
+  final _audioPlayer = AudioPlayer();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,12 +30,14 @@ class _HomePageState extends State<HomePage> {
         fit: StackFit.expand,
         children: [
           VxAnimatedBox()
-              .size(context.screenWidth, context.screenHeight)
+              .animDuration(
+                const Duration(seconds: 1),
+              )
               .withGradient(
                 LinearGradient(
                   colors: [
-                    AppColors.primaryColor1,
                     AppColors.primaryColor2,
+                    _selectedColor ?? AppColors.primaryColor1,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomLeft,
@@ -39,7 +48,7 @@ class _HomePageState extends State<HomePage> {
           AppBar(
             title: "Fire Radio".text.extraBold.xl3.make().shimmer(
                   primaryColor: AppColors.primaryColor2,
-                  secondaryColor: context.theme.focusColor,
+                  secondaryColor: Colors.white,
                 ),
             centerTitle: true,
             backgroundColor: Colors.transparent,
@@ -50,6 +59,13 @@ class _HomePageState extends State<HomePage> {
                   enlargeCenterPage: true,
                   aspectRatio: 1.0,
                   itemCount: radios!.length,
+                  onPageChanged: (index) {
+                    final hexColor = radios![index].color;
+                    _selectedColor = Color(
+                      int.tryParse(hexColor)!,
+                    );
+                    setState(() {});
+                  },
                   itemBuilder: (context, index) {
                     final radio = radios![index];
                     return VxBox(
@@ -61,12 +77,12 @@ class _HomePageState extends State<HomePage> {
                             child: VxBox(
                               child: radio.category.text.uppercase.bold
                                   .scale(1.3)
-                                  .color(context.theme.scaffoldBackgroundColor)
+                                  .extraBlack
                                   .make()
                                   .p16(),
                             )
                                 .height(50)
-                                .color(context.theme.focusColor)
+                                .color(Colors.white)
                                 .alignCenter
                                 .bottomLeftRounded(
                                   value: 10,
@@ -78,12 +94,12 @@ class _HomePageState extends State<HomePage> {
                             child: VStack(
                               [
                                 radio.name.text.bold
-                                    .color(context.theme.focusColor)
+                                    .color(Colors.white)
                                     .xl3
                                     .make(),
                                 5.heightBox,
                                 radio.tagline.text.sm
-                                    .color(context.theme.focusColor)
+                                    .color(Colors.white)
                                     .semiBold
                                     .make(),
                               ],
@@ -107,6 +123,7 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     )
+                        .alignCenter
                         .clip(Clip.antiAlias)
                         .bgImage(
                           DecorationImage(
@@ -122,24 +139,50 @@ class _HomePageState extends State<HomePage> {
                         )
                         .roundedLg
                         .border(
-                          color: context.theme.focusColor,
+                          color: Colors.white,
                           width: 5,
                         )
                         .make()
-                        .onInkDoubleTap(() {}) //#todo::implement
-                        .p16();
+                        .onInkDoubleTap(() {
+                      if (_isPlaying) {
+                        _audioPlayer.stop();
+                      } else {
+                        _playMusic(radio.url);
+                      }
+                    }).p16();
                   },
                 ).centered()
-              : CircularProgressIndicator(
+              : const CircularProgressIndicator(
                   //show a white circle and blue progress indicator
-                  backgroundColor: context.theme.focusColor,
+                  backgroundColor: Colors.white,
                 ).centered(),
-          const Align(
+          Align(
             alignment: Alignment.bottomCenter,
-            child: Icon(
-              CupertinoIcons.stop_circle,
-              size: 80,
-              color: Colors.white,
+            child: VStack(
+              [
+                if (_isPlaying)
+                  "Playing now - ${_selectedRadio.name} FM"
+                      .text
+                      .color(Colors.white)
+                      .italic
+                      .xl2
+                      .makeCentered(),
+                Icon(
+                  _isPlaying
+                      ? CupertinoIcons.stop_circle
+                      : CupertinoIcons.play_circle,
+                  size: 80,
+                  color: Colors.white,
+                ).onInkTap(() {
+                  if (_isPlaying) {
+                    _audioPlayer.stop();
+                  } else {
+                    _playMusic(_selectedRadio.url);
+                  }
+                  setState(() {});
+                }),
+              ],
+              crossAlignment: CrossAxisAlignment.center,
             ),
           ).pOnly(bottom: context.percentHeight * 12),
         ],
@@ -151,11 +194,22 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     fetchRadios();
+    _audioPlayer.onPlayerStateChanged.listen((event) {
+      _isPlaying = (event == PlayerState.PLAYING);
+      setState(() {});
+    });
+  }
+
+  _playMusic(String url) {
+    _audioPlayer.play(url);
+    _selectedRadio = radios!.firstWhere((element) => element.url == url);
+    setState(() {});
   }
 
   fetchRadios() async {
     final radioJson = await rootBundle.loadString("assets/radio.json");
     radios = AppRadioList.fromJson(radioJson).radios;
+    _selectedRadio = radios![0];
     setState(() {});
   }
 }
